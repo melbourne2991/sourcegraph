@@ -56,7 +56,9 @@ func maxReposToSearch() int {
 
 // Search provides search results and suggestions.
 func (r *schemaResolver) Search(args *struct {
-	Query string
+	Version     string
+	PatternType string
+	Query       string
 }) (interface {
 	Results(context.Context) (*searchResultsResolver, error)
 	Suggestions(context.Context, *searchSuggestionsArgs) ([]*searchSuggestionResolver, error)
@@ -65,10 +67,21 @@ func (r *schemaResolver) Search(args *struct {
 }, error) {
 	tr, _ := trace.New(context.Background(), "graphql.schemaResolver", "Search")
 	defer tr.Finish()
-	q, err := query.ParseAndCheck(args.Query)
+	var defaultToRegexp bool
+	switch args.Version {
+	case "V1":
+		defaultToRegexp = true
+	case "V2":
+		defaultToRegexp = false
+	default:
+		return nil, fmt.Errorf("unrecognized version: %v", args.Version)
+	}
+	qs := query.HandlePatternType(args.Query, defaultToRegexp)
+	q, err := query.ParseAndCheck(qs)
 	if err != nil {
 		return &didYouMeanQuotedResolver{query: args.Query, err: err}, nil
 	}
+
 	return &searchResolver{
 		query:        q,
 		zoekt:        search.Indexed(),
