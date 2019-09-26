@@ -537,6 +537,7 @@ export function withWorkspaceRootInputRevision(
 export function buildSearchURLQuery(query: string): string {
     const searchParams = new URLSearchParams()
     searchParams.set('q', query)
+    // &PatternType= query
     return searchParams
         .toString()
         .replace(/%2F/g, '/')

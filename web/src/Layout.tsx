@@ -42,6 +42,7 @@ import { UserAreaHeaderNavItem } from './user/area/UserAreaHeader'
 import { UserSettingsAreaRoute } from './user/settings/UserSettingsArea'
 import { UserSettingsSidebarItems } from './user/settings/UserSettingsSidebar'
 import { parseBrowserRepoURL } from './util/url'
+import { patternTypes } from './search/results/SearchResults'
 
 export interface LayoutProps
     extends RouteComponentProps<any>,
@@ -88,9 +89,13 @@ export interface LayoutProps
     fetchHighlightedFileLines: (ctx: FetchFileCtx, force?: boolean) => Observable<string[]>
     searchRequest: (
         query: string,
+        version: string,
+        patternType: patternTypes,
         { extensionsController }: ExtensionsControllerProps<'services'>
     ) => Observable<GQL.ISearchResults | ErrorLike>
-
+    // The pattern type determined by the UI toggle, or the defaultPatternType in settings.
+    patternType: patternTypes
+    togglePatternType: (patternType: patternTypes) => void
     isSourcegraphDotCom: boolean
     showCampaigns: boolean
 

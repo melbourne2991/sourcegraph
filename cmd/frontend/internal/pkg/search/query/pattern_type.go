@@ -18,11 +18,11 @@ func HandlePatternType(input string, defaultToRegexp bool) string {
 	var tokens2 []string
 	for _, t := range tokens {
 		switch t {
-		case "patternType:regex":
+		case "patterntype:regex":
 			isRegex = true
-		case "patternType:regexp":
+		case "patterntype:regexp":
 			isRegex = true
-		case "patternType:literal":
+		case "patterntype:literal":
 			isRegex = false
 		default:
 			tokens2 = append(tokens2, t)

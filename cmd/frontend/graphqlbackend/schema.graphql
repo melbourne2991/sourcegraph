@@ -1009,8 +1009,8 @@ enum SearchVersion {
 
 # The search pattern type.
 enum SearchPatternType {
-    Literal
-    Regexp
+    literal
+    regexp
 }
 
 # A query and an associated number of times it occurred.

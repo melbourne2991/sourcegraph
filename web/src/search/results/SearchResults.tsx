@@ -28,6 +28,8 @@ import { SearchResultsFilterBars, SearchScopeWithOptionalName } from './SearchRe
 import { SearchResultsList } from './SearchResultsList'
 import { SearchResultTypeTabs } from './SearchResultTypeTabs'
 
+export type patternTypes = 'literal' | 'regexp'
+
 export interface SearchResultsProps
     extends ExtensionsControllerProps<'executeCommand' | 'services'>,
         PlatformContextProps<'forceUpdateTooltip'>,
@@ -42,6 +44,8 @@ export interface SearchResultsProps
     fetchHighlightedFileLines: (ctx: FetchFileCtx, force?: boolean) => Observable<string[]>
     searchRequest: (
         query: string,
+        version: string,
+        patternType: patternTypes,
         { extensionsController }: ExtensionsControllerProps<'services'>
     ) => Observable<GQL.ISearchResults | ErrorLike>
     isSourcegraphDotCom: boolean
@@ -77,6 +81,11 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
 
     public componentDidMount(): void {
         this.props.telemetryService.logViewEvent('SearchResults')
+        const patternType =
+            (this.props.settingsCascade.final &&
+                !isErrorLike(this.props.settingsCascade.final) &&
+                this.props.settingsCascade.final['search.defaultPatternType']) ||
+            'literal'
 
         this.subscriptions.add(
             this.componentUpdates
@@ -110,7 +119,7 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
                                 },
                             ],
                             // Do async search request
-                            this.props.searchRequest(query, this.props).pipe(
+                            this.props.searchRequest(query, 'V2', patternType, this.props).pipe(
                                 // Log telemetry
                                 tap(
                                     results =>

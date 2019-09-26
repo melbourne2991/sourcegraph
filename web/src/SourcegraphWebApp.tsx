@@ -50,6 +50,7 @@ import { UserAreaRoute } from './user/area/UserArea'
 import { UserAreaHeaderNavItem } from './user/area/UserAreaHeader'
 import { UserSettingsAreaRoute } from './user/settings/UserSettingsArea'
 import { UserSettingsSidebarItems } from './user/settings/UserSettingsSidebar'
+import { patternTypes } from './search/results/SearchResults'
 
 export interface SourcegraphWebAppProps extends KeyboardShortcutsProps {
     exploreSections: readonly ExploreSectionDescriptor[]
@@ -94,6 +95,10 @@ interface SourcegraphWebAppState extends SettingsCascadeProps {
      * The current search query in the navbar.
      */
     navbarSearchQuery: string
+    /**
+     * The current search pattern type.
+     */
+    searchPatternType: patternTypes
 }
 
 const LIGHT_THEME_LOCAL_STORAGE_KEY = 'light-theme'
@@ -144,6 +149,7 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
             navbarSearchQuery: '',
             settingsCascade: EMPTY_SETTINGS_CASCADE,
             viewerSubject: SITE_SUBJECT_NO_ADMIN,
+            searchPatternType: 'literal',
         }
     }
 
@@ -185,6 +191,16 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
             from(this.platformContext.settings).subscribe(settingsCascade => this.setState({ settingsCascade }))
         )
 
+        this.subscriptions.add(
+            from(this.platformContext.settings).subscribe(settingsCascade => {
+                const defaultPatternType =
+                    settingsCascade.final &&
+                    !isErrorLike(settingsCascade.final) &&
+                    settingsCascade.final['search.defaultPatternType']
+                const searchPatternType = !!defaultPatternType ? defaultPatternType : 'literal'
+                this.setState({ searchPatternType })
+            })
+        )
         // React to OS theme change
         this.subscriptions.add(
             fromEventPattern<MediaQueryListEvent>(
@@ -277,6 +293,8 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
                                     extensionsController={this.extensionsController}
                                     telemetryService={eventLogger}
                                     isSourcegraphDotCom={window.context.sourcegraphDotComMode}
+                                    patternType={this.state.searchPatternType}
+                                    togglePatternType={this.togglePatternType}
                                 />
                             )}
                         />
@@ -295,6 +313,10 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
 
     private onNavbarQueryChange = (navbarSearchQuery: string) => {
         this.setState({ navbarSearchQuery })
+    }
+
+    private togglePatternType = (patternType: patternTypes) => {
+        this.setState({ searchPatternType: patternType })
     }
 }
 
