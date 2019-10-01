@@ -14,6 +14,7 @@ import { Settings } from '../../schema/settings.schema'
 import { eventLogger } from '../../tracking/eventLogger'
 import { FilterChip } from '../FilterChip'
 import { submitSearch, toggleSearchFilter, toggleSearchFilterAndReplaceSampleRepogroup } from '../helpers'
+import { patternTypes } from '../results/SearchResults'
 
 interface Props extends SettingsCascadeProps {
     location: H.Location
@@ -25,6 +26,7 @@ interface Props extends SettingsCascadeProps {
      * The current query.
      */
     query: string
+    patternType: patternTypes
 }
 
 export interface ISearchScope {
@@ -165,7 +167,7 @@ export class SearchFilterChips extends React.PureComponent<Props> {
             ? toggleSearchFilterAndReplaceSampleRepogroup(this.props.query, value)
             : toggleSearchFilter(this.props.query, value)
 
-        submitSearch(this.props.history, newQuery, 'filter')
+        submitSearch(this.props.history, newQuery, 'filter', this.props.patternType)
     }
 }
 

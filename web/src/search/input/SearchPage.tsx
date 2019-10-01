@@ -17,12 +17,14 @@ import { QueryBuilder } from './QueryBuilder'
 import { QueryInput } from './QueryInput'
 import { SearchButton } from './SearchButton'
 import { ISearchScope, SearchFilterChips } from './SearchFilterChips'
+import { patternTypes } from '../results/SearchResults'
 
 interface Props extends SettingsCascadeProps, ThemeProps, ThemePreferenceProps, ActivationProps {
     authenticatedUser: GQL.IUser | null
     location: H.Location
     history: H.History
     isSourcegraphDotCom: boolean
+    patternType: patternTypes
 }
 
 interface State {
@@ -92,6 +94,7 @@ export class SearchPage extends React.Component<Props, State> {
                                     authenticatedUser={this.props.authenticatedUser}
                                     settingsCascade={this.props.settingsCascade}
                                     isSourcegraphDotCom={this.props.isSourcegraphDotCom}
+                                    patternType={this.props.patternType}
                                 />
                             </div>
                             <QuickLinks quickLinks={quickLinks} className="search-page__input-sub-container" />
@@ -115,6 +118,7 @@ export class SearchPage extends React.Component<Props, State> {
                                     authenticatedUser={this.props.authenticatedUser}
                                     settingsCascade={this.props.settingsCascade}
                                     isSourcegraphDotCom={this.props.isSourcegraphDotCom}
+                                    patternType={this.props.patternType}
                                 />
                             </div>
                         </>
@@ -136,7 +140,7 @@ export class SearchPage extends React.Component<Props, State> {
     private onSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
         event.preventDefault()
         const query = [this.state.builderQuery, this.state.userQuery].filter(s => !!s).join(' ')
-        submitSearch(this.props.history, query, 'home', this.props.activation)
+        submitSearch(this.props.history, query, 'home', this.props.patternType, this.props.activation)
     }
 
     private getPageTitle(): string | undefined {

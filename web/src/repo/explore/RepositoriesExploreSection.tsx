@@ -10,8 +10,11 @@ import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../../
 import { pluralize } from '../../../../shared/src/util/strings'
 import { buildSearchURLQuery } from '../../../../shared/src/util/url'
 import { queryGraphQL } from '../../backend/graphql'
+import { patternTypes } from '../../search/results/SearchResults'
 
-interface Props {}
+interface Props {
+    patternType: patternTypes
+}
 
 const LOADING: 'loading' = 'loading'
 
@@ -104,7 +107,7 @@ export class RepositoriesExploreSection extends React.PureComponent<Props, State
                 </div>
                 {typeof totalCount === 'number' && totalCount > 0 && (
                     <div className="card-footer">
-                        <Link to={`/search?${buildSearchURLQuery('repo:')}`}>
+                        <Link to={`/search?${buildSearchURLQuery('repo:', this.props.patternType)}`}>
                             View all {totalCount} {pluralize('repository', totalCount, 'repositories')}
                             <ChevronRightIcon className="icon-inline" />
                         </Link>

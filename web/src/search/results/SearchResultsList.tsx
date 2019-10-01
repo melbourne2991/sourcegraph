@@ -30,6 +30,7 @@ import { ThemeProps } from '../../theme'
 import { eventLogger } from '../../tracking/eventLogger'
 import { shouldDisplayPerformanceWarning } from '../backend'
 import { SearchResultsInfoBar } from './SearchResultsInfoBar'
+import { patternTypes } from './SearchResults'
 
 const isSearchResults = (val: any): val is GQL.ISearchResults => val && val.__typename === 'SearchResults'
 
@@ -61,6 +62,9 @@ export interface SearchResultsListProps
     didSave: boolean
 
     fetchHighlightedFileLines: (ctx: FetchFileCtx, force?: boolean) => Observable<string[]>
+
+    patternType: patternTypes
+    togglePatternType: (patternType: patternTypes) => void
 }
 
 interface State {
@@ -409,7 +413,10 @@ export class SearchResultsList extends React.PureComponent<SearchResultsListProp
                                                                     className="btn btn-secondary btn-sm"
                                                                     to={
                                                                         '/search?' +
-                                                                        buildSearchURLQuery(proposedQuery.query)
+                                                                        buildSearchURLQuery(
+                                                                            proposedQuery.query,
+                                                                            this.props.patternType
+                                                                        )
                                                                     }
                                                                 >
                                                                     {proposedQuery.query || proposedQuery.description}

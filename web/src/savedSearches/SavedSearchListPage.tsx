@@ -12,10 +12,12 @@ import { asError, ErrorLike, isErrorLike } from '../../../shared/src/util/errors
 import { buildSearchURLQuery } from '../../../shared/src/util/url'
 import { NamespaceProps } from '../namespaces'
 import { deleteSavedSearch, fetchSavedSearches } from '../search/backend'
+import { patternTypes } from '../search/results/SearchResults'
 
 interface NodeProps extends RouteComponentProps {
     savedSearch: GQL.ISavedSearch
     onDelete: () => void
+    patternType: patternTypes
 }
 
 interface NodeState {
@@ -56,7 +58,7 @@ class SavedSearchNode extends React.PureComponent<NodeProps, NodeState> {
             <div className="saved-search-list-page__row list-group-item">
                 <div className="d-flex">
                     <MessageTextOutlineIcon className="saved-search-list-page__row--icon icon-inline" />
-                    <Link to={'/search?' + buildSearchURLQuery(this.props.savedSearch.query)}>
+                    <Link to={'/search?' + buildSearchURLQuery(this.props.savedSearch.query, this.props.patternType)}>
                         <div>{this.props.savedSearch.description}</div>
                     </Link>
                 </div>
@@ -95,7 +97,9 @@ interface State {
     savedSearchesOrError?: GQL.ISavedSearch[] | ErrorLike
 }
 
-interface Props extends RouteComponentProps<{}>, NamespaceProps {}
+interface Props extends RouteComponentProps<{}>, NamespaceProps {
+    patternType: patternTypes
+}
 
 export class SavedSearchListPage extends React.Component<Props, State> {
     public subscriptions = new Subscription()

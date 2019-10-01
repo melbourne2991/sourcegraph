@@ -15,6 +15,7 @@ import { ThemePreferenceProps, ThemeProps } from '../theme'
 import { EventLoggerProps } from '../tracking/eventLogger'
 import { showDotComMarketing } from '../util/features'
 import { NavLinks } from './NavLinks'
+import { patternTypes } from '../search/results/SearchResults'
 interface Props
     extends SettingsCascadeProps,
         PlatformContextProps,
@@ -37,6 +38,7 @@ interface Props
      * homepage.
      */
     lowProfile: boolean
+    patternType: patternTypes
 }
 
 interface State {

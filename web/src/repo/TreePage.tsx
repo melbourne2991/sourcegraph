@@ -41,6 +41,7 @@ import { fetchTree } from './backend'
 import { GitCommitNode, GitCommitNodeProps } from './commits/GitCommitNode'
 import { gitCommitFragment } from './commits/RepositoryCommitsPage'
 import { LSIFVerification } from './LSIFVerification'
+import { patternTypes } from '../search/results/SearchResults'
 
 const TreeEntry: React.FunctionComponent<{
     isDir: boolean
@@ -138,6 +139,7 @@ interface Props
     rev: string
     location: H.Location
     history: H.History
+    patternType: patternTypes
 }
 
 interface State {
@@ -371,6 +373,7 @@ export class TreePage extends React.PureComponent<Props, State> {
             this.props.history,
             this.getQueryPrefix() + this.state.query,
             this.props.filePath ? 'tree' : 'repo',
+            this.props.patternType,
             this.props.activation
         )
     }

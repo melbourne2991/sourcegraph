@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as H from 'history'
-import { SearchType } from './SearchResults'
+import { SearchType, patternTypes } from './SearchResults'
 import { NavLink } from 'react-router-dom'
 import { toggleSearchType } from '../helpers'
 import { buildSearchURLQuery } from '../../../../shared/src/util/url'
@@ -10,6 +10,7 @@ interface Props {
     location: H.Location
     type: SearchType
     query: string
+    patternType: patternTypes
 }
 
 const typeToProse: Record<Exclude<SearchType, null>, string> = {
@@ -19,9 +20,9 @@ const typeToProse: Record<Exclude<SearchType, null>, string> = {
     repo: 'Repos',
 }
 
-export const SearchResultTabHeader: React.FunctionComponent<Props> = ({ location, type, query }) => {
+export const SearchResultTabHeader: React.FunctionComponent<Props> = ({ location, type, query, patternType }) => {
     const q = toggleSearchType(query, type)
-    const builtURLQuery = buildSearchURLQuery(q)
+    const builtURLQuery = buildSearchURLQuery(q, patternType)
 
     const isActiveFunc = constant(location.search === `?${builtURLQuery}`)
     return (

@@ -50,6 +50,8 @@ export interface SearchResultsProps
     ) => Observable<GQL.ISearchResults | ErrorLike>
     isSourcegraphDotCom: boolean
     deployType: DeployType
+    patternType: patternTypes
+    togglePatternType: (patternType: patternTypes) => void
 }
 
 interface SearchResultsState {
@@ -299,6 +301,6 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
             ? toggleSearchFilterAndReplaceSampleRepogroup(this.props.navbarSearchQuery, value)
             : toggleSearchFilter(this.props.navbarSearchQuery, value)
 
-        submitSearch(this.props.history, newQuery, 'filter')
+        submitSearch(this.props.history, newQuery, 'filter', this.props.patternType)
     }
 }
