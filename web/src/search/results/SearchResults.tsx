@@ -3,7 +3,7 @@ import { isEqual } from 'lodash'
 import * as React from 'react'
 import { concat, Observable, Subject, Subscription } from 'rxjs'
 import { catchError, distinctUntilChanged, filter, map, startWith, switchMap, tap } from 'rxjs/operators'
-import { parseSearchURLQuery } from '..'
+import { parseSearchURLQuery, parseSearchURLPatternType } from '..'
 import { Contributions, Evaluated } from '../../../../shared/src/api/protocol'
 import { FetchFileCtx } from '../../../../shared/src/components/CodeExcerpt'
 import { ExtensionsControllerProps } from '../../../../shared/src/extensions/controller'
@@ -93,11 +93,14 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
             this.componentUpdates
                 .pipe(
                     startWith(this.props),
-                    map(props => parseSearchURLQuery(props.location.search)),
+                    map(props => [
+                        parseSearchURLQuery(props.location.search),
+                        parseSearchURLPatternType(props.location.search),
+                    ]),
                     // Search when a new search query was specified in the URL
                     distinctUntilChanged((a, b) => isEqual(a, b)),
-                    filter((query): query is string => !!query),
-                    tap(query => {
+                    filter((query): query is string[] => !!query),
+                    tap(([query]) => {
                         const query_data = queryTelemetryData(query)
                         this.props.telemetryService.log('SearchResultsQueried', {
                             code_search: { query_data },
@@ -110,7 +113,7 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
                             this.props.telemetryService.log('DiffSearchResultsQueried')
                         }
                     }),
-                    switchMap(query =>
+                    switchMap(([query, patternType]) =>
                         concat(
                             // Reset view state
                             [
@@ -121,7 +124,7 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
                                 },
                             ],
                             // Do async search request
-                            this.props.searchRequest(query, 'V2', patternType, this.props).pipe(
+                            this.props.searchRequest(query, 'V2', patternType as patternTypes, this.props).pipe(
                                 // Log telemetry
                                 tap(
                                     results =>

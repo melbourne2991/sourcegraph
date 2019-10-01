@@ -316,6 +316,7 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
     }
 
     private togglePatternType = (patternType: patternTypes) => {
+        console.log('UPDATING PATTERIN TYPE', patternType)
         this.setState({ searchPatternType: patternType })
     }
 }

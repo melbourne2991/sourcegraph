@@ -1,4 +1,5 @@
 import { escapeRegExp } from 'lodash'
+import { patternTypes } from './results/SearchResults'
 
 /**
  * Parses the query out of the URL search params (the 'q' parameter). If the 'q' parameter is not present, it
@@ -7,6 +8,11 @@ import { escapeRegExp } from 'lodash'
 export function parseSearchURLQuery(query: string): string | undefined {
     const searchParams = new URLSearchParams(query)
     return searchParams.get('q') || undefined
+}
+
+export function parseSearchURLPatternType(query: string): patternTypes | undefined {
+    const searchParams = new URLSearchParams(query)
+    return (searchParams.get('patternType') as patternTypes) || undefined
 }
 
 export function searchQueryForRepoRev(repoName: string, rev?: string): string {
