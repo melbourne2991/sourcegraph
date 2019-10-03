@@ -12,6 +12,7 @@ import {
     OBSERVABLE_SEARCH_REQUEST,
 } from '../testHelpers'
 import { SearchResults, SearchResultsProps } from './SearchResults'
+import { SearchPatternType } from '../../../../shared/src/graphql/schema'
 
 describe('SearchResults', () => {
     setLinkComponent((props: any) => <a {...props} />)
@@ -38,6 +39,8 @@ describe('SearchResults', () => {
         platformContext: { forceUpdateTooltip: sinon.spy() },
         telemetryService: { log: noop, logViewEvent: noop },
         deployType: 'dev',
+        patternType: SearchPatternType.regexp,
+        togglePatternType: (patternType: SearchPatternType) => {},
     }
 
     it('calls the search request once', () => {

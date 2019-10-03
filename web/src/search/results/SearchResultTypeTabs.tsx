@@ -1,13 +1,13 @@
 import * as React from 'react'
 import * as H from 'history'
 import { SearchResultTabHeader } from './SearchResultTab'
-import { patternTypes } from './SearchResults'
+import { SearchPatternType } from '../../../../shared/src/graphql/schema'
 
 interface Props {
     location: H.Location
     history: H.History
     query: string
-    patternType: patternTypes
+    patternType: SearchPatternType
 }
 
 export const SearchResultTypeTabs: React.FunctionComponent<Props> = props => (

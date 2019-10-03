@@ -1,16 +1,17 @@
 import * as React from 'react'
 import * as H from 'history'
-import { SearchType, patternTypes } from './SearchResults'
+import { SearchType } from './SearchResults'
 import { NavLink } from 'react-router-dom'
 import { toggleSearchType } from '../helpers'
 import { buildSearchURLQuery } from '../../../../shared/src/util/url'
 import { constant } from 'lodash'
+import { SearchPatternType } from '../../../../shared/src/graphql/schema'
 
 interface Props {
     location: H.Location
     type: SearchType
     query: string
-    patternType: patternTypes
+    patternType: SearchPatternType
 }
 
 const typeToProse: Record<Exclude<SearchType, null>, string> = {
