@@ -4,7 +4,7 @@
     flex: 1 1 auto;
     position: relative;
 
-    // The size of the toggle icons in the query input
+    // The width of the toggle icons in the query input.
     $toggle-icon-width: 24px;
 
     &__input {
@@ -12,7 +12,7 @@
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
         // Padding added so that the input value does not overlap with the toggle buttons.
-        // The padding should be calculated by the width of an icon width * number of icons + 0.5rem.
+        // The padding should be calculated by the width of an icon width * number of icons + 0. 5rem.
         padding-right: calc(#{$toggle-icon-width} + 0.5rem);
     }
 
