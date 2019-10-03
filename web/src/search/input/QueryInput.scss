@@ -12,8 +12,8 @@
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
         // Padding added so that the input value does not overlap with the toggle buttons.
-        // The padding should be calculated by the width of an icon width * number of icons + 0.25rem.
-        padding-right: calc(#{$toggle-icon-width} + 0.25rem);
+        // The padding should be calculated by the width of an icon width * number of icons + 0.5rem.
+        padding-right: calc(#{$toggle-icon-width} + 0.5rem);
     }
 
     &__suggestions {
