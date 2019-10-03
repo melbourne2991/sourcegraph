@@ -257,7 +257,7 @@ export class QueryInput extends React.Component<Props, State> {
             this.state.suggestions.length !== 0
 
         return (
-            <div className="query-input2 d-flex">
+            <div className="query-input2">
                 <input
                     className="form-control query-input2__input rounded-left e2e-query-input"
                     value={this.props.value}
