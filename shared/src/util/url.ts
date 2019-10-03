@@ -1,5 +1,6 @@
 import { Position, Range, Selection } from '@sourcegraph/extension-api-types'
 import { WorkspaceRootWithMetadata } from '../api/client/services/workspaceService'
+import { SearchPatternType } from '../graphql/schema'
 
 export interface RepoSpec {
     /**
@@ -534,11 +535,11 @@ export function withWorkspaceRootInputRevision(
 /**
  * Builds a URL query for the given query (without leading `?`).
  */
-export function buildSearchURLQuery(query: string, patternType: SearchResultType): string {
+export function buildSearchURLQuery(query: string, patternType: SearchPatternType): string {
     const searchParams = new URLSearchParams()
     searchParams.set('q', query)
     searchParams.set('patternType', patternType)
-    // &PatternType= query
+
     return searchParams
         .toString()
         .replace(/%2F/g, '/')
