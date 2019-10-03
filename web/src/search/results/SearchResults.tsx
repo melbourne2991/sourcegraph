@@ -27,8 +27,7 @@ import { queryTelemetryData } from '../queryTelemetry'
 import { SearchResultsFilterBars, SearchScopeWithOptionalName } from './SearchResultsFilterBars'
 import { SearchResultsList } from './SearchResultsList'
 import { SearchResultTypeTabs } from './SearchResultTypeTabs'
-
-export type patternTypes = 'literal' | 'regexp'
+import { buildSearchURLQuery } from '../../../../shared/src/util/url'
 
 export interface SearchResultsProps
     extends ExtensionsControllerProps<'executeCommand' | 'services'>,
@@ -45,13 +44,13 @@ export interface SearchResultsProps
     searchRequest: (
         query: string,
         version: string,
-        patternType: patternTypes,
+        patternType: GQL.SearchPatternType,
         { extensionsController }: ExtensionsControllerProps<'services'>
     ) => Observable<GQL.ISearchResults | ErrorLike>
     isSourcegraphDotCom: boolean
     deployType: DeployType
-    patternType: patternTypes
-    togglePatternType: (patternType: patternTypes) => void
+    patternType: GQL.SearchPatternType
+    togglePatternType: (patternType: GQL.SearchPatternType) => void
 }
 
 interface SearchResultsState {
@@ -70,6 +69,11 @@ interface SearchResultsState {
 /** All values that are valid for the `type:` filter. `null` represents default code search. */
 export type SearchType = 'diff' | 'commit' | 'symbol' | 'repo' | null
 
+// The latest supported version of our search syntax. Users should never be able to determine the search version.
+// The version is set based on the release tag of the instance. Anything before 3.9.0 will not pass a version parameter,
+// and will therefore default to V1.
+const LATEST_VERSION = 'V2'
+
 export class SearchResults extends React.Component<SearchResultsProps, SearchResultsState> {
     public state: SearchResultsState = {
         didSaveQuery: false,
@@ -82,12 +86,19 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
     private subscriptions = new Subscription()
 
     public componentDidMount(): void {
-        this.props.telemetryService.logViewEvent('SearchResults')
-        const patternType =
+        const patternType = parseSearchURLPatternType(this.props.location.search)
+        const defaultPatternType =
             (this.props.settingsCascade.final &&
                 !isErrorLike(this.props.settingsCascade.final) &&
                 this.props.settingsCascade.final['search.defaultPatternType']) ||
-            'literal'
+            GQL.SearchPatternType.literal
+
+        if (!patternType) {
+            const newLoc = '/search?' + buildSearchURLQuery(this.props.navbarSearchQuery, defaultPatternType)
+            window.location.replace(newLoc)
+        }
+
+        this.props.telemetryService.logViewEvent('SearchResults')
 
         this.subscriptions.add(
             this.componentUpdates
@@ -99,7 +110,7 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
                     ]),
                     // Search when a new search query was specified in the URL
                     distinctUntilChanged((a, b) => isEqual(a, b)),
-                    filter((query): query is string[] => !!query),
+                    filter((query): query is string[] => !!query[0] && !!query[1]),
                     tap(([query]) => {
                         const query_data = queryTelemetryData(query)
                         this.props.telemetryService.log('SearchResultsQueried', {
@@ -124,32 +135,43 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
                                 },
                             ],
                             // Do async search request
-                            this.props.searchRequest(query, 'V2', patternType as patternTypes, this.props).pipe(
-                                // Log telemetry
-                                tap(
-                                    results =>
-                                        this.props.telemetryService.log('SearchResultsFetched', {
-                                            code_search: {
-                                                // 🚨 PRIVACY: never provide any private data in { code_search: { results } }.
-                                                results: {
-                                                    results_count: isErrorLike(results) ? 0 : results.results.length,
-                                                    any_cloning: isErrorLike(results)
-                                                        ? false
-                                                        : results.cloning.length > 0,
+                            this.props
+                                .searchRequest(
+                                    query,
+                                    LATEST_VERSION,
+                                    patternType
+                                        ? (patternType as GQL.SearchPatternType)
+                                        : ('literal' as GQL.SearchPatternType),
+                                    this.props
+                                )
+                                .pipe(
+                                    // Log telemetry
+                                    tap(
+                                        results =>
+                                            this.props.telemetryService.log('SearchResultsFetched', {
+                                                code_search: {
+                                                    // 🚨 PRIVACY: never provide any private data in { code_search: { results } }.
+                                                    results: {
+                                                        results_count: isErrorLike(results)
+                                                            ? 0
+                                                            : results.results.length,
+                                                        any_cloning: isErrorLike(results)
+                                                            ? false
+                                                            : results.cloning.length > 0,
+                                                    },
                                                 },
-                                            },
-                                        }),
-                                    error => {
-                                        this.props.telemetryService.log('SearchResultsFetchFailed', {
-                                            code_search: { error_message: error.message },
-                                        })
-                                        console.error(error)
-                                    }
-                                ),
-                                // Update view with results or error
-                                map(resultsOrError => ({ resultsOrError })),
-                                catchError(error => [{ resultsOrError: error }])
-                            )
+                                            }),
+                                        error => {
+                                            this.props.telemetryService.log('SearchResultsFetchFailed', {
+                                                code_search: { error_message: error.message },
+                                            })
+                                            console.error(error)
+                                        }
+                                    ),
+                                    // Update view with results or error
+                                    map(resultsOrError => ({ resultsOrError })),
+                                    catchError(error => [{ resultsOrError: error }])
+                                )
                         )
                     )
                 )

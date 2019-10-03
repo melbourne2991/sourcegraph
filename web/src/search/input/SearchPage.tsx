@@ -17,14 +17,14 @@ import { QueryBuilder } from './QueryBuilder'
 import { QueryInput } from './QueryInput'
 import { SearchButton } from './SearchButton'
 import { ISearchScope, SearchFilterChips } from './SearchFilterChips'
-import { patternTypes } from '../results/SearchResults'
 
 interface Props extends SettingsCascadeProps, ThemeProps, ThemePreferenceProps, ActivationProps {
     authenticatedUser: GQL.IUser | null
     location: H.Location
     history: H.History
     isSourcegraphDotCom: boolean
-    patternType: patternTypes
+    patternType: GQL.SearchPatternType
+    togglePatternType: (patternType: GQL.SearchPatternType) => void
 }
 
 interface State {
@@ -81,6 +81,8 @@ export class SearchPage extends React.Component<Props, State> {
                             onChange={this.onUserQueryChange}
                             autoFocus="cursor-at-end"
                             hasGlobalQueryBehavior={true}
+                            patternType={this.props.patternType}
+                            togglePatternType={this.props.togglePatternType}
                         />
                         <SearchButton />
                     </div>

@@ -1,10 +1,14 @@
 import React from 'react'
+import * as H from 'history'
 import RegexIcon from 'mdi-react/RegexIcon'
-import { patternTypes } from '../results/SearchResults'
+import { submitSearch } from '../helpers'
+import { SearchPatternType } from '../../../../shared/src/graphql/schema'
 
 interface RegexpToggleProps {
-    togglePatternType: (patternType: patternTypes) => void
-    patternType: patternTypes
+    togglePatternType: (patternType: SearchPatternType) => void
+    patternType: SearchPatternType
+    navbarSearchQuery: string
+    history: H.History
 }
 
 export default class RegexpToggle extends React.Component<RegexpToggleProps> {
@@ -14,16 +18,18 @@ export default class RegexpToggle extends React.Component<RegexpToggleProps> {
 
     public render(): JSX.Element | null {
         return (
-            <>
-                <button onClick={this.toggle}>
+            <button onClick={this.toggle} className={`btn btn-icon icon-inline regexp-toggle`} type="button">
+                <span className={`${this.props.patternType === 'regexp' ? ' regexp-toggle--active' : ''}`}>
                     <RegexIcon />
-                </button>
-            </>
+                </span>
+            </button>
         )
     }
 
     private toggle = (e: React.MouseEvent): void => {
-        const newPatternType = this.props.patternType === 'literal' ? 'regexp' : 'literal'
+        const newPatternType =
+            this.props.patternType === SearchPatternType.literal ? SearchPatternType.regexp : SearchPatternType.literal
         this.props.togglePatternType(newPatternType)
+        submitSearch(this.props.history, this.props.navbarSearchQuery, 'filter', newPatternType)
     }
 }

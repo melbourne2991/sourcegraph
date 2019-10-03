@@ -41,7 +41,6 @@ import { fetchTree } from './backend'
 import { GitCommitNode, GitCommitNodeProps } from './commits/GitCommitNode'
 import { gitCommitFragment } from './commits/RepositoryCommitsPage'
 import { LSIFVerification } from './LSIFVerification'
-import { patternTypes } from '../search/results/SearchResults'
 
 const TreeEntry: React.FunctionComponent<{
     isDir: boolean
@@ -139,7 +138,8 @@ interface Props
     rev: string
     location: H.Location
     history: H.History
-    patternType: patternTypes
+    patternType: GQL.SearchPatternType
+    togglePatternType: (patternType: GQL.SearchPatternType) => void
 }
 
 interface State {

@@ -50,7 +50,7 @@ import { UserAreaRoute } from './user/area/UserArea'
 import { UserAreaHeaderNavItem } from './user/area/UserAreaHeader'
 import { UserSettingsAreaRoute } from './user/settings/UserSettingsArea'
 import { UserSettingsSidebarItems } from './user/settings/UserSettingsSidebar'
-import { patternTypes } from './search/results/SearchResults'
+import { parseSearchURLPatternType } from './search'
 
 export interface SourcegraphWebAppProps extends KeyboardShortcutsProps {
     exploreSections: readonly ExploreSectionDescriptor[]
@@ -98,7 +98,7 @@ interface SourcegraphWebAppState extends SettingsCascadeProps {
     /**
      * The current search pattern type.
      */
-    searchPatternType: patternTypes
+    searchPatternType: GQL.SearchPatternType
 }
 
 const LIGHT_THEME_LOCAL_STORAGE_KEY = 'light-theme'
@@ -143,13 +143,18 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
     constructor(props: SourcegraphWebAppProps) {
         super(props)
         this.subscriptions.add(this.extensionsController)
+
+        // The patternType in the URL query parameter. If none is provided, default to literal.
+        // This will be updated with the default in settings when the web app mounts.
+        const urlPatternType = parseSearchURLPatternType(window.location.search) || GQL.SearchPatternType.literal
+
         this.state = {
             themePreference: readStoredThemePreference(),
             systemIsLightTheme: !this.darkThemeMediaList.matches,
             navbarSearchQuery: '',
             settingsCascade: EMPTY_SETTINGS_CASCADE,
             viewerSubject: SITE_SUBJECT_NO_ADMIN,
-            searchPatternType: 'literal',
+            searchPatternType: urlPatternType,
         }
     }
 
@@ -193,12 +198,19 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
 
         this.subscriptions.add(
             from(this.platformContext.settings).subscribe(settingsCascade => {
-                const defaultPatternType =
-                    settingsCascade.final &&
-                    !isErrorLike(settingsCascade.final) &&
-                    settingsCascade.final['search.defaultPatternType']
-                const searchPatternType = !!defaultPatternType ? defaultPatternType : 'literal'
-                this.setState({ searchPatternType })
+                if (!parseSearchURLPatternType(window.location.search)) {
+                    // When the web app mounts, if there is no patternType parameter in the URL,
+                    // set the search pattern type to the default based on settings, if it is set.
+                    // Otherwise, default to literal.
+                    const defaultPatternType =
+                        settingsCascade.final &&
+                        !isErrorLike(settingsCascade.final) &&
+                        settingsCascade.final['search.defaultPatternType']
+
+                    const searchPatternType = !!defaultPatternType ? defaultPatternType : 'literal'
+
+                    this.setState({ searchPatternType })
+                }
             })
         )
         // React to OS theme change
@@ -315,8 +327,7 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
         this.setState({ navbarSearchQuery })
     }
 
-    private togglePatternType = (patternType: patternTypes) => {
-        console.log('UPDATING PATTERIN TYPE', patternType)
+    private togglePatternType = (patternType: GQL.SearchPatternType) => {
         this.setState({ searchPatternType: patternType })
     }
 }

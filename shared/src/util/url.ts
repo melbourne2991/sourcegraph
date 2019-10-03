@@ -1,6 +1,5 @@
 import { Position, Range, Selection } from '@sourcegraph/extension-api-types'
 import { WorkspaceRootWithMetadata } from '../api/client/services/workspaceService'
-import { patternTypes } from '../../../web/src/search/results/SearchResults'
 
 export interface RepoSpec {
     /**
@@ -535,7 +534,7 @@ export function withWorkspaceRootInputRevision(
 /**
  * Builds a URL query for the given query (without leading `?`).
  */
-export function buildSearchURLQuery(query: string, patternType: patternTypes): string {
+export function buildSearchURLQuery(query: string, patternType: SearchResultType): string {
     const searchParams = new URLSearchParams()
     searchParams.set('q', query)
     searchParams.set('patternType', patternType)

@@ -19,7 +19,6 @@ import { eventLogger } from '../../tracking/eventLogger'
 import { PersonLink } from '../../user/PersonLink'
 import { UserAvatar } from '../../user/UserAvatar'
 import { RepositoryStatsAreaPageProps } from './RepositoryStatsArea'
-import { patternTypes } from '../../search/results/SearchResults'
 
 interface QuerySpec {
     revisionRange: string | null
@@ -30,7 +29,7 @@ interface QuerySpec {
 interface RepositoryContributorNodeProps extends QuerySpec {
     node: GQL.IRepositoryContributor
     repoName: string
-    patternType: patternTypes
+    patternType: GQL.SearchPatternType
 }
 
 const RepositoryContributorNode: React.FunctionComponent<RepositoryContributorNodeProps> = ({
@@ -158,7 +157,7 @@ const queryRepositoryContributors = memoizeObservable(
 )
 
 interface Props extends RepositoryStatsAreaPageProps, RouteComponentProps<{}> {
-    patternType: patternTypes
+    patternType: GQL.SearchPatternType
 }
 
 class FilteredContributorsConnection extends FilteredConnection<

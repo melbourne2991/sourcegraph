@@ -42,7 +42,6 @@ import { UserAreaHeaderNavItem } from './user/area/UserAreaHeader'
 import { UserSettingsAreaRoute } from './user/settings/UserSettingsArea'
 import { UserSettingsSidebarItems } from './user/settings/UserSettingsSidebar'
 import { parseBrowserRepoURL } from './util/url'
-import { patternTypes } from './search/results/SearchResults'
 
 export interface LayoutProps
     extends RouteComponentProps<any>,
@@ -90,12 +89,12 @@ export interface LayoutProps
     searchRequest: (
         query: string,
         version: string,
-        patternType: patternTypes,
+        patternType: GQL.SearchPatternType,
         { extensionsController }: ExtensionsControllerProps<'services'>
     ) => Observable<GQL.ISearchResults | ErrorLike>
     // The pattern type determined by the UI toggle, or the defaultPatternType in settings.
-    patternType: patternTypes
-    togglePatternType: (patternType: patternTypes) => void
+    patternType: GQL.SearchPatternType
+    togglePatternType: (patternType: GQL.SearchPatternType) => void
     isSourcegraphDotCom: boolean
     showCampaigns: boolean
 

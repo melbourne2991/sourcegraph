@@ -7,7 +7,6 @@ import { asError, createAggregateError, ErrorLike } from '../../../shared/src/ut
 import { memoizeObservable } from '../../../shared/src/util/memoizeObservable'
 import { mutateGraphQL, queryGraphQL } from '../backend/graphql'
 import { USE_CODEMOD } from '../enterprise/codemod'
-import { patternTypes } from './results/SearchResults'
 
 const genericSearchResultInterfaceFields = gql`
   __typename
@@ -36,7 +35,7 @@ const genericSearchResultInterfaceFields = gql`
 export function search(
     query: string,
     version: string,
-    patternType: patternTypes,
+    patternType: GQL.SearchPatternType,
     { extensionsController }: ExtensionsControllerProps<'services'>
 ): Observable<GQL.ISearchResults | ErrorLike> {
     /**

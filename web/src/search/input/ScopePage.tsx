@@ -18,7 +18,6 @@ import { fetchReposByQuery } from '../backend'
 import { submitSearch } from '../helpers'
 import { QueryInput, queryUpdates } from './QueryInput'
 import { SearchButton } from './SearchButton'
-import { patternTypes } from '../results/SearchResults'
 
 const ScopeNotFound: React.FunctionComponent = () => (
     <HeroPage
@@ -36,7 +35,7 @@ const ScopeNotFound: React.FunctionComponent = () => (
 
 interface ScopePageProps extends RouteComponentProps<{ id: GQL.ID }>, SettingsCascadeProps {
     authenticatedUser: GQL.IUser | null
-    patternType: patternTypes
+    patternType: GQL.SearchPatternType
 }
 
 interface State {
@@ -166,6 +165,7 @@ export class ScopePage extends React.Component<ScopePageProps, State> {
                                 location={this.props.location}
                                 history={this.props.history}
                                 placeholder="Search in this scope..."
+                                // onSubmit={this.onSubmit}
                             />
                             <SearchButton />
                         </Form>

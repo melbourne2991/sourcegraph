@@ -1,8 +1,9 @@
 import * as React from 'react'
 import { Redirect, RouteComponentProps } from 'react-router'
 import { LayoutProps } from './Layout'
-import { parseSearchURLQuery } from './search'
+import { parseSearchURLQuery, parseSearchURLPatternType } from './search'
 import { lazyComponent } from './util/lazyComponent'
+import { isErrorLike } from '../../shared/src/util/errors'
 
 const SearchPage = lazyComponent(() => import('./search/input/SearchPage'), 'SearchPage')
 const SearchResults = lazyComponent(() => import('./search/results/SearchResults'), 'SearchResults')

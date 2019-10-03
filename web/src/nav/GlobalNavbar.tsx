@@ -15,8 +15,7 @@ import { ThemePreferenceProps, ThemeProps } from '../theme'
 import { EventLoggerProps } from '../tracking/eventLogger'
 import { showDotComMarketing } from '../util/features'
 import { NavLinks } from './NavLinks'
-import { patternTypes } from '../search/results/SearchResults'
-import RegexpToggle from '../search/input/RegexpToggle'
+
 interface Props
     extends SettingsCascadeProps,
         PlatformContextProps,
@@ -39,8 +38,8 @@ interface Props
      * homepage.
      */
     lowProfile: boolean
-    patternType: patternTypes
-    togglePatternType: (patternType: patternTypes) => void
+    patternType: GQL.SearchPatternType
+    togglePatternType: (patternType: GQL.SearchPatternType) => void
 }
 
 interface State {
@@ -124,7 +123,6 @@ export class GlobalNavbar extends React.PureComponent<Props, State> {
                                     navbarSearchQuery={this.props.navbarSearchQuery}
                                     onChange={this.props.onNavbarQueryChange}
                                 />
-                                <RegexpToggle {...this.props} />
                             </div>
                         )}
                     </>

@@ -966,7 +966,7 @@ type Query {
         version: SearchVersion = V1
         # PatternType controls the search pattern type, if and only if it is not specified in the query string using
         # the `patternType:` field.
-        patternType: SearchPatternType = Literal
+        patternType: SearchPatternType = literal
         # The search query (such as "foo" or "repo:myrepo foo").
         query: String = ""
     ): Search

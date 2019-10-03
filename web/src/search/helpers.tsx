@@ -3,7 +3,7 @@ import { ActivationProps } from '../../../shared/src/components/activation/Activ
 import * as GQL from '../../../shared/src/graphql/schema'
 import { buildSearchURLQuery } from '../../../shared/src/util/url'
 import { eventLogger } from '../tracking/eventLogger'
-import { SearchType, patternTypes } from './results/SearchResults'
+import { SearchType } from './results/SearchResults'
 
 /**
  * @param activation If set, records the DidSearch activation event for the new user activation
@@ -13,10 +13,11 @@ export function submitSearch(
     history: H.History,
     query: string,
     source: 'home' | 'nav' | 'repo' | 'tree' | 'filter' | 'type',
-    patternType: patternTypes,
+    patternType: GQL.SearchPatternType,
     activation?: ActivationProps['activation']
 ): void {
     // Go to search results page
+    console.log('@@@pattern type', patternType)
     const path = '/search?' + buildSearchURLQuery(query, patternType)
     eventLogger.log('SearchSubmitted', {
         code_search: {

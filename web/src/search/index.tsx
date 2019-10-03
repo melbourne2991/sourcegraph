@@ -1,5 +1,5 @@
 import { escapeRegExp } from 'lodash'
-import { patternTypes } from './results/SearchResults'
+import { SearchPatternType } from '../../../shared/src/graphql/schema'
 
 /**
  * Parses the query out of the URL search params (the 'q' parameter). If the 'q' parameter is not present, it
@@ -10,9 +10,14 @@ export function parseSearchURLQuery(query: string): string | undefined {
     return searchParams.get('q') || undefined
 }
 
-export function parseSearchURLPatternType(query: string): patternTypes | undefined {
+export function parseSearchURLPatternType(query: string): SearchPatternType | undefined {
     const searchParams = new URLSearchParams(query)
-    return (searchParams.get('patternType') as patternTypes) || undefined
+    const patternType = searchParams.get('patternType')
+    if (patternType !== SearchPatternType.literal && patternType !== SearchPatternType.regexp) {
+        return undefined
+    } else {
+        return patternType
+    }
 }
 
 export function searchQueryForRepoRev(repoName: string, rev?: string): string {

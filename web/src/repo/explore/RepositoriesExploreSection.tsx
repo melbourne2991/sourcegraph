@@ -10,10 +10,9 @@ import { asError, createAggregateError, ErrorLike, isErrorLike } from '../../../
 import { pluralize } from '../../../../shared/src/util/strings'
 import { buildSearchURLQuery } from '../../../../shared/src/util/url'
 import { queryGraphQL } from '../../backend/graphql'
-import { patternTypes } from '../../search/results/SearchResults'
 
 interface Props {
-    patternType: patternTypes
+    patternType: GQL.SearchPatternType
 }
 
 const LOADING: 'loading' = 'loading'

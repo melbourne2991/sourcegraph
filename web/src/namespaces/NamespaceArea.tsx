@@ -2,7 +2,6 @@ import { ExtensionsControllerProps } from '../../../shared/src/extensions/contro
 import * as GQL from '../../../shared/src/graphql/schema'
 import { ThemeProps } from '../theme'
 import { RouteDescriptor } from '../util/contributions'
-import { patternTypes } from '../search/results/SearchResults'
 
 /**
  * Properties passed to all page components in the namespace area.
@@ -11,7 +10,7 @@ export interface NamespaceAreaContext extends ExtensionsControllerProps, ThemePr
     namespace: Pick<GQL.Namespace, '__typename' | 'id' | 'url'>
 
     authenticatedUser: GQL.IUser | null
-    patternType: patternTypes
+    patternType: GQL.SearchPatternType
 }
 
 export interface NamespaceAreaRoute extends RouteDescriptor<NamespaceAreaContext> {}

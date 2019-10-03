@@ -30,7 +30,6 @@ import { ThemeProps } from '../../theme'
 import { eventLogger } from '../../tracking/eventLogger'
 import { shouldDisplayPerformanceWarning } from '../backend'
 import { SearchResultsInfoBar } from './SearchResultsInfoBar'
-import { patternTypes } from './SearchResults'
 
 const isSearchResults = (val: any): val is GQL.ISearchResults => val && val.__typename === 'SearchResults'
 
@@ -63,8 +62,8 @@ export interface SearchResultsListProps
 
     fetchHighlightedFileLines: (ctx: FetchFileCtx, force?: boolean) => Observable<string[]>
 
-    patternType: patternTypes
-    togglePatternType: (patternType: patternTypes) => void
+    patternType: GQL.SearchPatternType
+    togglePatternType: (patternType: GQL.SearchPatternType) => void
 }
 
 interface State {
