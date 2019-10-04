@@ -57,7 +57,7 @@ func maxReposToSearch() int {
 // Search provides search results and suggestions.
 func (r *schemaResolver) Search(args *struct {
 	Version     string
-	PatternType string
+	PatternType *string
 	Query       string
 }) (interface {
 	Results(context.Context) (*searchResultsResolver, error)
@@ -76,7 +76,8 @@ func (r *schemaResolver) Search(args *struct {
 	default:
 		return nil, fmt.Errorf("unrecognized version: %v", args.Version)
 	}
-	switch args.PatternType {
+
+	switch *args.PatternType {
 	case "regexp":
 		defaultToRegexp = true
 	case "literal":
