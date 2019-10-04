@@ -20,7 +20,7 @@ type CreateChangesetData struct {
 }
 
 type externalServiceClient interface {
-	CreateOrUpdateThread(ctx context.Context, repoID api.RepoID, extRepo api.ExternalRepoSpec, data CreateChangesetData) (threadID int64, err error)
+	CreateOrUpdateThread(ctx context.Context, repoName api.RepoName, repoID api.RepoID, extRepo api.ExternalRepoSpec, data CreateChangesetData) (threadID int64, err error)
 	RefreshThreadMetadata(ctx context.Context, threadID, threadExternalServiceID int64, externalID string, repoID api.RepoID) error
 	GetThreadTimelineItems(ctx context.Context, threadExternalID string) ([]events.CreationData, error)
 }
@@ -56,9 +56,8 @@ func getClientForRepo(ctx context.Context, repoID api.RepoID) (client externalSe
 	switch src := src.(type) {
 	case *repos.GithubSource:
 		return &githubExternalServiceClient{src: src}, svc.ID, nil
-	// case *repos.BitbucketServerSource:
-	// return &bExternalServiceClient{src: src}, svc.ID, nil
-	// TODO!(sqs)
+	case *repos.BitbucketServerSource:
+		return &bitbucketServerExternalServiceClient{src: src}, svc.ID, nil
 	default:
 		return nil, 0, fmt.Errorf("unhandled service type %T", src)
 	}

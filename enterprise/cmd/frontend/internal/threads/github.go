@@ -193,7 +193,7 @@ type githubExternalServiceClient struct {
 	src *repos.GithubSource
 }
 
-func (c *githubExternalServiceClient) CreateOrUpdateThread(ctx context.Context, repoID api.RepoID, extRepo api.ExternalRepoSpec, data CreateChangesetData) (threadID int64, err error) {
+func (c *githubExternalServiceClient) CreateOrUpdateThread(ctx context.Context, repoName api.RepoName, repoID api.RepoID, extRepo api.ExternalRepoSpec, data CreateChangesetData) (threadID int64, err error) {
 	githubRepositoryID := graphql.ID(extRepo.ID)
 	thread, err := c.createGitHubPullRequest(ctx, githubRepositoryID, data)
 	if err != nil && strings.Contains(err.Error(), "A pull request already exists") {
