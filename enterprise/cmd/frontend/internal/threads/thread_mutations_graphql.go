@@ -162,8 +162,8 @@ func PublishThreadToExternalService(ctx context.Context, thread_ graphqlbackend.
 		return err
 	}
 
-	// TODO!(sqs): un-hardcode
-	campaignName := "Deprecate glob (npm)"
+	// TODO!(sqs): use actual campaign name, but its weird because a thread can be in >1 campaigns
+	campaignName := thread_.Title()
 	_, err = CreateOnExternalService(ctx, thread.ID, thread_.Title(), threadBody, campaignName, repo, []byte(thread.PendingPatch))
 	return err
 }

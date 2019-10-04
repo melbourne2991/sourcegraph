@@ -50,7 +50,11 @@ func CreateOnExternalService(ctx context.Context, existingThreadID int64, thread
 	}
 
 	// Push the newly created ref. TODO!(sqs) this only makes sense for the demo
-	cmd := gitserver.DefaultClient.Command("git", "push", "-f", "--", "origin", fmt.Sprintf("refs/heads/%s:refs/heads/%s", defaultBranch.AbbrevName(), defaultBranch.AbbrevName()), refName+":"+refName)
+	cmd := gitserver.DefaultClient.Command("git",
+		"-c", "remote.origin.mirror=false", // required to avoid deleting all other local+remote refs not specified in the command
+		"push", "-f", "--", "origin",
+		refName+":"+refName,
+	)
 	cmd.Repo = gitserver.Repo{Name: api.RepoName(repo.Name())}
 	if out, err := cmd.CombinedOutput(ctx); err != nil {
 		return 0, fmt.Errorf("%s\n\n%s", err, out)
