@@ -32,7 +32,7 @@ var errEventNotFound = errors.New("event not found")
 
 type dbEvents struct{}
 
-const selectColumns = `id, type, actor_user_id, external_actor_username, external_actor_url, created_at, data, thread_id, thread_diagnostic_edge_id, campaign_id, comment_id, rule_id, repository_id, user_id, organization_id, registry_extension_id, imported_from_external_service_id`
+const selectColumns = `id, type, actor_user_id, external_actor_username, external_actor_url, created_at, data, thread_id, thread_diagnostic_edge_id, campaign_id, comment_id, rule_id, repository_id, user_id, organization_id, registry_extension_id, external_service_id`
 
 // Create creates a event. The event argument's (Event).ID field is ignored. The new event is
 // returned.
@@ -129,7 +129,7 @@ func (o dbEventsListOptions) sqlConditions() []*sqlf.Query {
 	addCondition(int64(o.Objects.User), "user_id")
 	addCondition(int64(o.Objects.Organization), "organization_id")
 	addCondition(int64(o.Objects.RegistryExtension), "registry_extension_id")
-	addCondition(o.ImportedFromExternalServiceID, "imported_from_external_service_id")
+	addCondition(o.ImportedFromExternalServiceID, "external_service_id")
 	return conds
 }
 

@@ -21,10 +21,14 @@ type Params struct {
 }
 
 type Result struct {
-	CombinedOutput string            `json:"combinedOutput"`
-	Ok             bool              `json:"ok"`
-	Error          string            `json:"error,omitempty"`
-	Files          map[string]string `json:"files"`
+	Commands []CommandResult   `json:"commands"`
+	Files    map[string]string `json:"files"`
+}
+
+type CommandResult struct {
+	CombinedOutput string `json:"combinedOutput"`
+	Ok             bool   `json:"ok"`
+	Error          string `json:"error,omitempty"`
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -146,24 +150,19 @@ find # mimic 'git ls-files'
 
 	workDir := filepath.Join(tempDir, params.Dir)
 	result := Result{
-		Files: make(map[string]string, len(params.IncludeFiles)),
+		Commands: make([]CommandResult, len(params.Commands)),
+		Files:    make(map[string]string, len(params.IncludeFiles)),
 	}
 	for i, args := range params.Commands {
 		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Dir = workDir
 		out, err := cmd.CombinedOutput()
 		if err != nil {
+			result.Commands[i].Error = fmt.Sprintf("%s (command: %v)", err, args)
 			log.Printf("Error running command %v in %q:%s\n%s", args, params.ArchiveURL, err, out)
 		}
-		done := err != nil || i == len(params.Commands)-1
-		if done {
-			result.CombinedOutput = string(out)
-			if err != nil {
-				result.Error = fmt.Sprintf("%s (command: %v)", err, args)
-			}
-			result.Ok = err == nil
-			break
-		}
+		result.Commands[i].CombinedOutput = string(out)
+		result.Commands[i].Ok = err == nil
 	}
 
 	for _, includeFile := range params.IncludeFiles {

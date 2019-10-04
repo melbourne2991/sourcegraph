@@ -7,9 +7,11 @@ export interface BundlerExecutionContext {
 }
 
 export interface BundlerExecutionResult {
-    combinedOutput: string
-    ok: boolean
-    error?: string
+    commands: {
+        combinedOutput: string
+        ok: boolean
+        error?: string
+    }[]
     files: { [path: string]: string }
 }
 
@@ -35,7 +37,8 @@ const executeBundlerCommandUncached = async ({
         body: JSON.stringify({
             archiveURL: getPublicRepoArchiveUrl(context.repository, context.commit),
             commands,
-            includeFiles: ['Gemfile', 'Gemfile.lock'],
+            // TODO!(sqs): support changes to all Gemfile.* and anything else that `bundler remove` might touch
+            includeFiles: ['Gemfile', 'Gemfile.lock', 'Gemfile.common', 'Gemfile.modules'],
         } as {
             archiveURL: string
             dir?: string
@@ -47,15 +50,6 @@ const executeBundlerCommandUncached = async ({
         throw new Error(`error executing bundler command in ${context.repository}: HTTP ${resp.status}`)
     }
     const result: BundlerExecutionResult = await resp.json()
-    if (
-        !result.ok &&
-        /* TODO!(sqs): for handling when gem is mentioned in Gemfile.common etc. */
-        !result.combinedOutput.includes('is not specified in')
-    ) {
-        throw new Error(
-            `error executing bundler command in ${context.repository}: ${result.error || ''} - ${result.combinedOutput}`
-        )
-    }
     return result
 }
 
@@ -72,10 +66,16 @@ export const bundlerRemove = async (
     context: BundlerExecutionContext
 ): Promise<BundlerExecutionResult> => {
     // TODO!(sqs): run `bundle install --deployment` after to get updates to lockfile?
-    return executeBundlerCommand({
+    const result = await executeBundlerCommand({
         commands: [['bundler', 'remove', '--', gemName], ['bundler', 'lock', '--conservative', '--local']],
         context,
     })
+    for (const commandResult of result.commands) {
+        if (!commandResult.ok && !commandResult.combinedOutput.includes('is not specified in')) {
+            throw new Error(`error in bundlerRemove: ${commandResult.error}\n${commandResult.combinedOutput}`)
+        }
+    }
+    return result
 }
 
 function getPublicRepoArchiveUrl(repo: string, commit: string): string {

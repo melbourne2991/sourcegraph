@@ -68,7 +68,7 @@ const provideDiagnostics = (
                               {
                                   repositories: {
                                       // includes: ['acts-as-taggable'],
-                                      // includes: ['discourse'],
+                                      includes: ['openproject|activeadmin'],
                                       excludes: ['sd9'],
                                       type: 'regexp',
                                   },
@@ -215,21 +215,17 @@ async function computeRemoveDependencyEdit(
     ): Promise<void> => {
         const p = parseRepoURI(gemfile.uri)
         const result = await bundlerRemove(dep.name, { repository: p.repoName, commit: p.commitID! })
-        edit.replace(
-            new URL(gemfile.uri),
-            new sourcegraph.Range(new sourcegraph.Position(0, 0), gemfile.positionAt(gemfile.text!.length)),
-            result.files.Gemfile
-        )
-        if (result.files['Gemfile.lock']) {
-            const uri = new URL(gemfile.uri + '.lock')
-            const gemfileLock = await sourcegraph.workspace.openTextDocument(uri)
-            edit.replace(
-                uri,
-                new sourcegraph.Range(new sourcegraph.Position(0, 0), gemfileLock.positionAt(gemfileLock.text!.length)),
-                result.files['Gemfile.lock']
-            )
+        for (const path of Object.keys(result.files)) {
+            const uri = new URL(gemfile.uri.replace('Gemfile', '') + path)
+            const doc = await sourcegraph.workspace.openTextDocument(uri)
+            if (doc.text !== result.files[path]) {
+                edit.replace(
+                    uri,
+                    new sourcegraph.Range(new sourcegraph.Position(0, 0), doc.positionAt(doc.text!.length)),
+                    result.files[path]
+                )
+            }
         }
-        // TODO!(sqs): support changes to Gemfile.common, Gemfile.modules, etc.
     }
     const addIndirectDependencyEdits = (gemfile: sourcegraph.TextDocument, edit: sourcegraph.WorkspaceEdit): void => {
         // Handle when the dep to remove is an indirect dep.
@@ -237,9 +233,11 @@ async function computeRemoveDependencyEdit(
             new URL(gemfile.uri),
             gemfile.positionAt(gemfile.text!.length - 1),
             `\n\nraise ${JSON.stringify(
-                `Gem ${dep.name} is banned, but the following gems use it: ${dep.directAncestors.join(
-                    ', '
-                )}. Manual fixup needed.`
+                `Gem ${dep.name} is banned${
+                    dep.directAncestors.length > 0
+                        ? `, but the following gems use it: ${dep.directAncestors.join(', ')}`
+                        : ''
+                }. Manual fixup needed.`
             )}`
         )
     }
@@ -248,8 +246,11 @@ async function computeRemoveDependencyEdit(
     if (isLikelyDirectDependency) {
         await addBundlerRemoveEdits(gemfile, edit)
     }
-    const noEdits = Array.from(edit.textEdits()).length === 0
-    if (noEdits) {
+    const countEdits = () => Array.from(edit.textEdits()).length
+    if (!isLikelyDirectDependency && countEdits() === 0) {
+        await addBundlerRemoveEdits(gemfile, edit)
+    }
+    if (countEdits() === 0) {
         addIndirectDependencyEdits(gemfile, edit)
     }
     return edit
