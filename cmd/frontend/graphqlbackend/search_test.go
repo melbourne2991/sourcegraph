@@ -21,9 +21,9 @@ func TestSearch(t *testing.T) {
 		ResultCount int
 	}
 	tcs := []struct {
-		name          string
-		searchQuery   string
-		searchVersion string
+		name                         string
+		searchQuery                  string
+		searchVersion                string
 		reposListMock                func(v0 context.Context, v1 db.ReposListOptions) ([]*types.Repo, error)
 		repoRevsMock                 func(spec string, opt *git.ResolveRevisionOptions) (api.CommitID, error)
 		externalServicesListMock     func(opt db.ExternalServicesListOptions) ([]*types.ExternalService, error)
