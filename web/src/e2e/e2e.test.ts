@@ -327,14 +327,18 @@ describe('e2e test suite', () => {
         })
 
         test('Search results repo', async () => {
-            await driver.page.goto(sourcegraphBaseUrl + '/search?q=repo:%5Egithub.com/gorilla/mux%24')
+            await driver.page.goto(
+                sourcegraphBaseUrl + '/search?q=repo:%5Egithub.com/gorilla/mux%24&patternType=regexp'
+            )
             await driver.page.waitForSelector('a[href="/github.com/gorilla/mux"]', { visible: true })
             // Flaky https://github.com/sourcegraph/sourcegraph/issues/2704
             // await percySnapshot(page, 'Search results repo')
         })
 
         test('Search results file', async () => {
-            await driver.page.goto(sourcegraphBaseUrl + '/search?q=repo:%5Egithub.com/gorilla/mux%24+file:%5Emux.go%24')
+            await driver.page.goto(
+                sourcegraphBaseUrl + '/search?q=repo:%5Egithub.com/gorilla/mux%24+file:%5Emux.go%24&patternType=regexp'
+            )
             await driver.page.waitForSelector('a[href="/github.com/gorilla/mux"]', { visible: true })
             // Flaky https://github.com/sourcegraph/sourcegraph/issues/2704
             // await percySnapshot(page, 'Search results file')
@@ -1072,7 +1076,7 @@ describe('e2e test suite', () => {
                 .map(op => `${op}:${operators[op]}`)
                 .join('+')
 
-            await driver.page.goto(`${sourcegraphBaseUrl}/search?q=diff+${operatorsQuery}`)
+            await driver.page.goto(`${sourcegraphBaseUrl}/search?q=diff+${operatorsQuery}&patternType=regexp`)
             await driver.page.waitForSelector('.e2e-search-results-stats', { visible: true })
             await retry(async () => {
                 const label = await driver.page.evaluate(
@@ -1087,7 +1091,7 @@ describe('e2e test suite', () => {
             await driver.page.goto(sourcegraphBaseUrl + '/github.com/sourcegraph/go-diff')
             await driver.page.goto(
                 sourcegraphBaseUrl +
-                    '/search?q=diff+repo:sourcegraph/go-diff%403f415a150aec0685cb81b73cc201e762e075006d+type:file'
+                    '/search?q=diff+repo:sourcegraph/go-diff%403f415a150aec0685cb81b73cc201e762e075006d+type:file&patternType=regexp'
             )
             await driver.page.waitForSelector('.e2e-search-results-stats', { visible: true })
             await retry(async () => {
@@ -1141,7 +1145,9 @@ describe('e2e test suite', () => {
 
     describe('Search result type tabs', () => {
         test('Search results type tabs appear', async () => {
-            await driver.page.goto(sourcegraphBaseUrl + '/search?q=repo:%5Egithub.com/gorilla/mux%24')
+            await driver.page.goto(
+                sourcegraphBaseUrl + '/search?q=repo:%5Egithub.com/gorilla/mux%24&patternType=regexp'
+            )
             await driver.page.waitForSelector('.e2e-search-result-type-tabs', { visible: true })
             await driver.page.waitForSelector('.e2e-search-result-tab--active', { visible: true })
             const tabs = await driver.page.evaluate(() =>
@@ -1166,7 +1172,9 @@ describe('e2e test suite', () => {
             for (const searchType of ['diff', 'commit', 'symbol', 'repo']) {
                 await driver.page.waitForSelector(`.e2e-search-result-tab-${searchType}`)
                 await driver.page.click(`.e2e-search-result-tab-${searchType}`)
-                await driver.assertWindowLocation(`/search?q=repo:%5Egithub.com/gorilla/mux%24+type:${searchType}`)
+                await driver.assertWindowLocation(
+                    `/search?q=repo:%5Egithub.com/gorilla/mux%24+type:${searchType}&patternType=regexp`
+                )
             }
         })
     })
