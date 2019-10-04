@@ -28,7 +28,11 @@ func TestSearchResults(t *testing.T) {
 	limitOffset := &db.LimitOffset{Limit: maxReposToSearch() + 1}
 
 	getResults := func(t *testing.T, query string) []string {
-		r, err := (&schemaResolver{}).Search(&struct{ Query string }{Query: query})
+		r, err := (&schemaResolver{}).Search(&struct {
+			Version     string
+			PatternType *string
+			Query       string
+		}{Query: query})
 		if err != nil {
 			t.Fatal("Search:", err)
 		}
