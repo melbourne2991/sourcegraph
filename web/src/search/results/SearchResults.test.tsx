@@ -23,7 +23,7 @@ describe('SearchResults', () => {
     })
 
     const history = createBrowserHistory()
-    history.replace({ search: 'q=r:golang/oauth2+test+f:travis' })
+    history.replace({ search: 'q=r:golang/oauth2+test+f:travis&patternType=regexp' })
 
     const defaultProps: SearchResultsProps = {
         authenticatedUser: null,
