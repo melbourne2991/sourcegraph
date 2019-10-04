@@ -15,14 +15,14 @@ type externalThread struct {
 	thread        *DBThread
 	threadComment commentobjectdb.DBObjectCommentFields
 
-	comments []*comments.ExternalComment
+	comments []comments.ExternalComment
 }
 
-var MockImportExternalThreads func(repo api.RepoID, externalServiceID int64, toImport []*externalThread) error
+var MockImportExternalThreads func(repo api.RepoID, externalServiceID int64, toImport []externalThread) error
 
 // ImportExternalThreads replaces all existing threads for the objects from the given external
 // service with a new set of threads.
-func ImportExternalThreads(ctx context.Context, repo api.RepoID, externalServiceID int64, toImport []*externalThread) error {
+func ImportExternalThreads(ctx context.Context, repo api.RepoID, externalServiceID int64, toImport []externalThread) error {
 	if MockImportExternalThreads != nil {
 		return MockImportExternalThreads(repo, externalServiceID, toImport)
 	}
@@ -73,22 +73,21 @@ func ImportExternalThreads(ctx context.Context, repo api.RepoID, externalService
 	return nil
 }
 
-func dbCreateExternalThread(ctx context.Context, tx *sql.Tx, x *externalThread) (threadID int64, err error) {
+func dbCreateExternalThread(ctx context.Context, tx *sql.Tx, x externalThread) (threadID int64, err error) {
 	dbThread, err := (dbThreads{}).Create(ctx, tx, x.thread, x.threadComment)
 	if err != nil {
 		return 0, err
 	}
 	for _, comment := range x.comments {
-		tmp := *comment
-		tmp.ThreadPrimaryCommentID = dbThread.PrimaryCommentID
-		if err := comments.CreateExternalCommentReply(ctx, tx, tmp); err != nil {
+		comment.ThreadPrimaryCommentID = dbThread.PrimaryCommentID
+		if err := comments.CreateExternalCommentReply(ctx, tx, comment); err != nil {
 			return 0, err
 		}
 	}
 	return dbThread.ID, nil
 }
 
-func dbUpdateExternalThread(ctx context.Context, threadID int64, x *externalThread) error {
+func dbUpdateExternalThread(ctx context.Context, threadID int64, x externalThread) error {
 	update := dbThreadUpdate{
 		Title: &x.thread.Title,
 		State: &x.thread.State,
@@ -111,9 +110,8 @@ func dbUpdateExternalThread(ctx context.Context, threadID int64, x *externalThre
 	}
 
 	for _, comment := range x.comments {
-		tmp := *comment
-		tmp.ThreadPrimaryCommentID = dbThread.PrimaryCommentID
-		if err := comments.CreateExternalCommentReply(ctx, nil, tmp); err != nil {
+		comment.ThreadPrimaryCommentID = dbThread.PrimaryCommentID
+		if err := comments.CreateExternalCommentReply(ctx, nil, comment); err != nil {
 			return err
 		}
 	}

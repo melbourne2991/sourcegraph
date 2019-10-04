@@ -14,8 +14,12 @@ func Refresh(ctx context.Context, dbID int64) error {
 		return nil // no associated external services
 	}
 
-	// Update this thread's metadata.
-	if err := UpdateGitHubThreadMetadata(ctx, dbThread.ID, dbThread.ExternalServiceID, dbThread.ExternalID, dbThread.RepositoryID); err != nil {
+	// Refresh this thread's metadata.
+	client, _, err := getClientForRepo(ctx, dbThread.RepositoryID)
+	if err != nil {
+		return nil
+	}
+	if err := client.RefreshThreadMetadata(ctx, dbThread.ID, dbThread.ExternalServiceID, dbThread.ExternalID, dbThread.RepositoryID); err != nil {
 		return err
 	}
 

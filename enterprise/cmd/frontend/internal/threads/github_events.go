@@ -119,51 +119,14 @@ func ImportGitHubThreadEvents(ctx context.Context, threadID, threadExternalServi
 		return fmt.Errorf("thread %d: external service %d in DB does not match repository external service %d", threadID, threadExternalServiceID, externalServiceID)
 	}
 
-	result, err := getGitHubIssueOrPullRequestTimelineItems(ctx, client, graphql.ID(threadExternalID))
+	toImport, err := client.GetThreadTimelineItems(ctx, threadExternalID)
 	if err != nil {
 		return err
 	}
-
-	objects := events.Objects{Thread: threadID}
-
-	toImport := make([]events.CreationData, 0, len(result.TimelineItems.Nodes)+1)
-
-	// Creation event.
-	toImport = append(toImport, events.CreationData{
-		Type:                  eventTypeCreateThread,
-		Objects:               objects,
-		ActorUserID:           0, // TODO!(sqs): determine this, map from github if needed
-		ExternalActorUsername: result.Author.Login,
-		ExternalActorURL:      result.Author.URL,
-		CreatedAt:             result.CreatedAt,
-	})
-
-	// GitHub timeline events.
-	for _, ghEvent := range result.TimelineItems.Nodes {
-		if eventType, ok := githubEventTypes[ghEvent.Typename]; ok {
-			data := events.CreationData{
-				Type:      eventType,
-				Objects:   objects,
-				Data:      ghEvent,
-				CreatedAt: ghEvent.CreatedAt,
-			}
-
-			var actor *githubActor
-			if ghEvent.Author != nil {
-				actor = ghEvent.Author
-			} else if ghEvent.Actor != nil {
-				actor = ghEvent.Actor
-			}
-			if actor != nil {
-				data.ExternalActorUsername = actor.Login
-				data.ExternalActorURL = actor.URL
-			}
-
-			toImport = append(toImport, data)
-		}
+	for i := range toImport {
+		toImport[i].Objects.Thread = threadID
 	}
-
-	return events.ImportExternalEvents(ctx, externalServiceID, objects, toImport)
+	return events.ImportExternalEvents(ctx, externalServiceID, events.Objects{Thread: threadID}, toImport)
 }
 
 var githubEventTypes = map[string]events.Type{

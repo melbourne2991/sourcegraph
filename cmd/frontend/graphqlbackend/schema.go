@@ -400,10 +400,6 @@ type Mutation {
     # Remove diagnostics from a thread.
     removeDiagnosticsFromThread(thread: ID!, threadDiagnosticEdges: [ID!]!): EmptyResponse
 
-    # Force-refresh a repository's threads from external services. Threads are automatically
-    # refreshed on a regular basis, and this mutation should not usually be necessary.
-    forceRefreshRepositoryThreads(repository: ID!): Repository!
-
     # Update a campaign. The updated campaign is returned.
     updateCampaign(input: UpdateCampaignInput!): Campaign!
 

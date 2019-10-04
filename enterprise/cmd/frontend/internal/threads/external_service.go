@@ -3,64 +3,63 @@ package threads
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strings"
-	"time"
 
-	"github.com/pkg/errors"
-	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/backend"
+	"github.com/sourcegraph/sourcegraph/cmd/frontend/events"
+	"github.com/sourcegraph/sourcegraph/cmd/repo-updater/repos"
 	"github.com/sourcegraph/sourcegraph/pkg/api"
-	"github.com/sourcegraph/sourcegraph/pkg/gitserver"
-	"github.com/sourcegraph/sourcegraph/pkg/gitserver/protocol"
+	"github.com/sourcegraph/sourcegraph/pkg/repoupdater"
 )
 
-func CreateOnExternalService(ctx context.Context, existingThreadID int64, threadTitle, threadBody, campaignName string, repo *graphqlbackend.RepositoryResolver, patch []byte) (threadID int64, err error) {
-	defaultBranch, err := repo.DefaultBranch(ctx)
+type CreateChangesetData struct {
+	BaseRefName, HeadRefName string
+	Title                    string
+	Body                     string
+
+	ExistingThreadID int64
+}
+
+type externalServiceClient interface {
+	CreateOrUpdateThread(ctx context.Context, repoID api.RepoID, extRepo api.ExternalRepoSpec, data CreateChangesetData) (threadID int64, err error)
+	RefreshThreadMetadata(ctx context.Context, threadID, threadExternalServiceID int64, externalID string, repoID api.RepoID) error
+	GetThreadTimelineItems(ctx context.Context, threadExternalID string) ([]events.CreationData, error)
+}
+
+var cliFactory = repos.NewHTTPClientFactory()
+
+func getClientForRepo(ctx context.Context, repoID api.RepoID) (client externalServiceClient, externalServiceID int64, err error) {
+	// 🚨 SECURITY: Only site admins may read external services (they have secrets). TODO!(sqs)
+	if err := backend.CheckCurrentUserIsSiteAdmin(ctx); err != nil {
+		return nil, 0, err
+	}
+
+	svcs, err := repoupdater.DefaultClient.RepoExternalServices(ctx, uint32(repoID))
 	if err != nil {
-		return 0, err
+		return nil, 0, err
 	}
-	oid, err := defaultBranch.Target().OID(ctx)
+	// TODO!(sqs): how to choose if there are multiple
+	if len(svcs) == 0 {
+		return nil, 0, fmt.Errorf("no external services exist for repo %d", repoID)
+	}
+	svc := svcs[0]
+	src, err := repos.NewSource(&repos.ExternalService{
+		ID:          svc.ID,
+		Kind:        svc.Kind,
+		DisplayName: svc.DisplayName,
+		Config:      svc.Config,
+		CreatedAt:   svc.CreatedAt,
+		UpdatedAt:   svc.UpdatedAt,
+	}, cliFactory)
 	if err != nil {
-		return 0, err
+		return nil, 0, err
 	}
-	var IsAlphanumericWithPeriod = regexp.MustCompile(`[^a-zA-Z0-9_.]+`)
-	branchName := "a8n/" + strings.TrimSuffix(IsAlphanumericWithPeriod.ReplaceAllString(campaignName, "-"), "-") // TODO!(sqs): hack
-
-	// TODO!(sqs): For the prototype, prevent changes to any "live" repositories. The sd9 and sd9org
-	// namespaces are sandbox/fake accounts used for the prototype.
-	if !strings.HasPrefix(repo.Name(), "github.com/sd9/") && !strings.HasPrefix(repo.Name(), "github.com/sd9org/") {
-		return 0, errors.New("refusing to modify non-sd9 test repo")
+	switch src := src.(type) {
+	case *repos.GithubSource:
+		return &githubExternalServiceClient{src: src}, svc.ID, nil
+	// case *repos.BitbucketServerSource:
+	// return &bExternalServiceClient{src: src}, svc.ID, nil
+	// TODO!(sqs)
+	default:
+		return nil, 0, fmt.Errorf("unhandled service type %T", src)
 	}
-
-	// Create a commit and ref.
-	refName := "refs/heads/" + branchName
-	if _, err := gitserver.DefaultClient.CreateCommitFromPatch(ctx, protocol.CreateCommitFromPatchRequest{
-		Repo:       api.RepoName(repo.Name()),
-		BaseCommit: api.CommitID(oid),
-		TargetRef:  refName,
-		Patch:      string(patch),
-		CommitInfo: protocol.PatchCommitInfo{
-			AuthorName:  "Quinn Slack",         // TODO!(sqs): un-hardcode
-			AuthorEmail: "sqs@sourcegraph.com", // TODO!(sqs): un-hardcode
-			Message:     "a8n: " + campaignName,
-			Date:        time.Now(),
-		},
-	}); err != nil {
-		return 0, err
-	}
-
-	// Push the newly created ref. TODO!(sqs) this only makes sense for the demo
-	cmd := gitserver.DefaultClient.Command("git", "push", "-f", "--", "origin", fmt.Sprintf("refs/heads/%s:refs/heads/%s", defaultBranch.AbbrevName(), defaultBranch.AbbrevName()), refName+":"+refName)
-	cmd.Repo = gitserver.Repo{Name: api.RepoName(repo.Name())}
-	if out, err := cmd.CombinedOutput(ctx); err != nil {
-		return 0, fmt.Errorf("%s\n\n%s", err, out)
-	}
-
-	return createOrGetExistingGitHubPullRequest(ctx, repo.DBID(), repo.DBExternalRepo(), CreateChangesetData{
-		BaseRefName:      defaultBranch.AbbrevName(),
-		HeadRefName:      branchName,
-		Title:            threadTitle,
-		Body:             threadBody + fmt.Sprintf("\n\n"+`<img src="https://about.sourcegraph.com/sourcegraph-mark.png" width=12 height=12> Campaign: [%s](#)`, campaignName),
-		ExistingThreadID: existingThreadID,
-	})
 }

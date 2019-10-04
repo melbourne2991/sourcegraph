@@ -12,7 +12,6 @@ import { PageTitle } from '../../components/PageTitle'
 import { getExternalService } from '../../site-admin/externalServices'
 import { eventLogger } from '../../tracking/eventLogger'
 import { fetchRepository } from './backend'
-import { RepositoryForceRefreshExternalServiceDataButton } from './RepositoryForceRefreshExternalServiceData'
 
 interface Props extends RouteComponentProps<any>, ExtensionsControllerProps {
     repo: GQL.IRepository
@@ -86,11 +85,6 @@ export class RepoSettingsOptionsPage extends React.PureComponent<Props, State> {
                                 remove this repository, the configuration must be updated on all external services.
                             </p>
                         )}
-                        <RepositoryForceRefreshExternalServiceDataButton
-                            repository={this.props.repo}
-                            buttonClassName="btn-secondary"
-                            extensionsController={this.props.extensionsController}
-                        />
                     </div>
                 )}
                 <Form>

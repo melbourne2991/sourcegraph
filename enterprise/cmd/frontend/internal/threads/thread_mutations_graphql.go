@@ -79,18 +79,22 @@ func (GraphQLResolver) ImportThreadsFromExternalService(ctx context.Context, arg
 		if err != nil {
 			return nil, err
 		}
-		threadID, err := createOrGetExistingGitHubIssueOrPullRequest(ctx, repo.ID, repo.ExternalRepo, spec.Number)
-		if err != nil {
-			return nil, err
-		}
-		return threadsByDBIDs(ctx, []int64{threadID})
+		_ = repo
+		_ = threadsByDBIDs
+		panic("TODO!(sqs): removed bc not yet implemented for bitbucket server")
+		// threadID, err := createOrGetExistingGitHubIssueOrPullRequest(ctx, repo.ID, repo.ExternalRepo, spec.Number)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// return threadsByDBIDs(ctx, []int64{threadID})
 
 	case arg.Input.ByQuery != nil:
-		threadIDs, err := createOrGetExistingGitHubThreadsByQuery(ctx, *arg.Input.ByQuery)
-		if err != nil {
-			return nil, err
-		}
-		return threadsByDBIDs(ctx, threadIDs)
+		panic("TODO!(sqs): removed bc not yet implemented for bitbucket server")
+		// threadIDs, err := createOrGetExistingGitHubThreadsByQuery(ctx, *arg.Input.ByQuery)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// return threadsByDBIDs(ctx, threadIDs)
 
 	default:
 		return nil, errors.New("no threads specified to import from external service")
