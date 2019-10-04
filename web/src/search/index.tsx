@@ -10,6 +10,10 @@ export function parseSearchURLQuery(query: string): string | undefined {
     return searchParams.get('q') || undefined
 }
 
+/**
+ * Parses the pattern type out of the URL search params (the 'patternType' parameter). If the 'pattern' parameter
+ * is not present, or it is an invalid value, it returns undefined.
+ */
 export function parseSearchURLPatternType(query: string): SearchPatternType | undefined {
     const searchParams = new URLSearchParams(query)
     const patternType = searchParams.get('patternType')

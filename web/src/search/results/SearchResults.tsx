@@ -87,14 +87,11 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
 
     public componentDidMount(): void {
         const patternType = parseSearchURLPatternType(this.props.location.search)
-        const defaultPatternType =
-            (this.props.settingsCascade.final &&
-                !isErrorLike(this.props.settingsCascade.final) &&
-                this.props.settingsCascade.final['search.defaultPatternType']) ||
-            GQL.SearchPatternType.literal
 
         if (!patternType) {
-            const newLoc = '/search?' + buildSearchURLQuery(this.props.navbarSearchQuery, defaultPatternType)
+            // If the patternType query parameter does not exist in the URL or is invalid, redirect to a URL using
+            // the default pattern type.
+            const newLoc = '/search?' + buildSearchURLQuery(this.props.navbarSearchQuery, this.props.patternType)
             window.location.replace(newLoc)
         }
 
@@ -141,7 +138,7 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
                                     LATEST_VERSION,
                                     patternType
                                         ? (patternType as GQL.SearchPatternType)
-                                        : ('literal' as GQL.SearchPatternType),
+                                        : GQL.SearchPatternType.literal,
                                     this.props
                                 )
                                 .pipe(
