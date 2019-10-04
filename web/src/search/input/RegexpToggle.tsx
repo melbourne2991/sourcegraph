@@ -18,7 +18,7 @@ export default class RegexpToggle extends React.Component<RegexpToggleProps> {
 
     public render(): JSX.Element | null {
         return (
-            <button onClick={this.toggle} className={`btn btn-icon icon-inline regexp-toggle`} type="button">
+            <button onClick={this.toggle} className="btn btn-icon icon-inline regexp-toggle" type="button">
                 <span className={`${this.props.patternType === 'regexp' ? ' regexp-toggle--active' : ''}`}>
                     <RegexIcon />
                 </span>

@@ -207,7 +207,7 @@ class ColdSourcegraphWebApp extends React.Component<SourcegraphWebAppProps, Sour
                         !isErrorLike(settingsCascade.final) &&
                         settingsCascade.final['search.defaultPatternType']
 
-                    const searchPatternType = !!defaultPatternType ? defaultPatternType : 'literal'
+                    const searchPatternType = defaultPatternType ? defaultPatternType : 'literal'
 
                     this.setState({ searchPatternType })
                 }

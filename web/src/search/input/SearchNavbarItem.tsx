@@ -38,7 +38,7 @@ export const SearchNavbarItem: React.FunctionComponent<Props> = ({
             e.preventDefault()
             submitSearch(history, navbarSearchQuery, 'nav', patternType, activation)
         },
-        [history, navbarSearchQuery, activation]
+        [history, navbarSearchQuery, patternType, activation]
     )
 
     return (

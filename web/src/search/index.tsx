@@ -15,9 +15,8 @@ export function parseSearchURLPatternType(query: string): SearchPatternType | un
     const patternType = searchParams.get('patternType')
     if (patternType !== SearchPatternType.literal && patternType !== SearchPatternType.regexp) {
         return undefined
-    } else {
-        return patternType
     }
+    return patternType
 }
 
 export function searchQueryForRepoRev(repoName: string, rev?: string): string {
