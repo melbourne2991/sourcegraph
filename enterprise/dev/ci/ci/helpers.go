@@ -95,9 +95,9 @@ func (c Config) ensureCommit() error {
 		errs = multierror.Append(errs, fmt.Errorf("%v | Output: %q", err, string(output)))
 	}
 	if !found {
-		fmt.Printf("This branch %q at commit %s does not include any of these commits: %s.\n", c.branch, c.commit, strings.Join(c.mustIncludeCommit, ", "))
-		fmt.Println("Rebase onto the latest master to get the latest CI fixes.")
-		fmt.Printf("Errors from `git merge-base --is-ancestor $COMMIT HEAD`: %s", errs.Error())
+		// fmt.Printf("This branch %q at commit %s does not include any of these commits: %s.\n", c.branch, c.commit, strings.Join(c.mustIncludeCommit, ", "))
+		// fmt.Println("Rebase onto the latest master to get the latest CI fixes.")
+		// fmt.Printf("Errors from `git merge-base --is-ancestor $COMMIT HEAD`: %s", errs.Error())
 		// return errs // TODO!(sqs)
 	}
 	return nil
