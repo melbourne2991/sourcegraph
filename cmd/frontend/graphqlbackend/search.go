@@ -77,13 +77,15 @@ func (r *schemaResolver) Search(args *struct {
 		return nil, fmt.Errorf("unrecognized version: %v", args.Version)
 	}
 
-	switch *args.PatternType {
-	case "regexp":
-		defaultToRegexp = true
-	case "literal":
-		defaultToRegexp = false
-	default:
-		return nil, fmt.Errorf("unrecognized patternType: %v", args.PatternType)
+	if args.PatternType != nil {
+		switch *args.PatternType {
+		case "regexp":
+			defaultToRegexp = true
+		case "literal":
+			defaultToRegexp = false
+		default:
+			return nil, fmt.Errorf("unrecognized patternType: %v", args.PatternType)
+		}
 	}
 	qs := query.HandlePatternType(args.Query, defaultToRegexp)
 	q, err := query.ParseAndCheck(qs)

@@ -23,7 +23,7 @@ func TestSearchSuggestions(t *testing.T) {
 			Version     string
 			PatternType *string
 			Query       string
-		}{Query: query})
+		}{Query: query, Version: "V1"})
 		if err != nil {
 			t.Fatal("Search:", err)
 		}
@@ -112,7 +112,7 @@ func TestSearchSuggestions(t *testing.T) {
 			Version     string
 			PatternType *string
 			Query       string
-		}{Query: "[foo"})
+		}{Query: "[foo", Version: "V1"})
 		if err != nil {
 			t.Fatal(err)
 		}
