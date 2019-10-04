@@ -311,7 +311,7 @@ query($id: ID!) {
 }
 
 func (c *githubExternalServiceClient) GetThreadTimelineItems(ctx context.Context, threadExternalID string) ([]events.CreationData, error) {
-	result, err := getGitHubIssueOrPullRequestTimelineItems(ctx, c.src.Client(), graphql.ID(threadExternalID))
+	result, err := c.getGitHubIssueOrPullRequestTimelineItems(ctx, graphql.ID(threadExternalID))
 	if err != nil {
 		return nil, err
 	}
@@ -351,4 +351,138 @@ func (c *githubExternalServiceClient) GetThreadTimelineItems(ctx context.Context
 		}
 	}
 	return items, nil
+}
+
+var MockImportGitHubThreadEvents func() error // TODO!(sqs)
+
+func ImportGitHubThreadEvents(ctx context.Context, threadID, threadExternalServiceID int64, threadExternalID string, repoID api.RepoID) error {
+	if MockImportGitHubThreadEvents != nil {
+		return MockImportGitHubThreadEvents()
+	}
+
+	client, externalServiceID, err := getClientForRepo(ctx, repoID)
+	if err != nil {
+		return err
+	}
+	if externalServiceID != threadExternalServiceID {
+		// TODO!(sqs): handle this case, not sure when it would happen, also is complicated by when
+		// there are multiple external services for a repo.  TODO!(sqs): also make this look up the
+		// external service using the externalServiceID directly when repo-updater exposes an API to
+		// do that.
+		return fmt.Errorf("thread %d: external service %d in DB does not match repository external service %d", threadID, threadExternalServiceID, externalServiceID)
+	}
+
+	toImport, err := client.GetThreadTimelineItems(ctx, threadExternalID)
+	if err != nil {
+		return err
+	}
+	for i := range toImport {
+		toImport[i].Objects.Thread = threadID
+	}
+	return events.ImportExternalEvents(ctx, externalServiceID, events.Objects{Thread: threadID}, toImport)
+}
+
+var githubEventTypes = map[string]events.Type{
+	"IssueComment":         comments.EventTypeComment,
+	"PullRequestReview":    eventTypeReview,
+	"ReviewRequestedEvent": eventTypeReviewRequested,
+	"MergedEvent":          eventTypeMergeThread,
+	"ClosedEvent":          eventTypeCloseThread,
+	"ReopenedEvent":        eventTypeReopenThread,
+}
+
+type githubPullRequestOrIssueTimelineData struct {
+	CreatedAt     time.Time    `json:"createdAt"`
+	Author        *githubActor `json:"author"`
+	TimelineItems struct {
+		Nodes []githubEvent
+	}
+}
+
+type githubEvent struct {
+	Typename  string       `json:"__typename"`
+	ID        graphql.ID   `json:"id"`
+	Actor     *githubActor `json:"actor,omitempty"`
+	Author    *githubActor `json:"author,omitempty"`
+	State     string       `json:"state,omitempty"`
+	CreatedAt time.Time    `json:"createdAt"`
+}
+
+const (
+	githubIssueOrPullRequestTimelineItemsCommonQuery = `
+			author { ...ActorFields }
+			createdAt
+`
+	githubIssueOrPullRequestEventCommonTimelineItemTypes = `ISSUE_COMMENT, CLOSED_EVENT, REOPENED_EVENT`
+	githubIssueOrPullRequestEventCommonQuery             = `
+... on IssueComment {
+	id
+	actor: author { ... ActorFields }
+	createdAt
+}
+... on ClosedEvent {
+	id
+	actor { ... ActorFields }
+	createdAt
+}
+... on ReopenedEvent {
+	id
+	actor { ... ActorFields }
+	createdAt
+}
+`
+)
+
+func (c *githubExternalServiceClient) getGitHubIssueOrPullRequestTimelineItems(ctx context.Context, githubIssueOrPullRequestID graphql.ID) (pull *githubPullRequestOrIssueTimelineData, err error) {
+	var data struct {
+		Node *githubPullRequestOrIssueTimelineData
+	}
+	if err := c.src.Client().RequestGraphQL(ctx, "", `
+query ImportGitHubThreadEvents($issueOrPullRequest: ID!) {
+	node(id: $issueOrPullRequest) {
+		... on Issue {
+		`+githubIssueOrPullRequestTimelineItemsCommonQuery+`
+					timelineItems(first: 10, itemTypes: [`+githubIssueOrPullRequestEventCommonTimelineItemTypes+`]) {
+						nodes {
+							__typename
+		`+githubIssueOrPullRequestEventCommonQuery+`
+						}
+					}
+				}
+		... on PullRequest {
+`+githubIssueOrPullRequestTimelineItemsCommonQuery+`
+			timelineItems(first: 10, itemTypes: [MERGED_EVENT, REVIEW_REQUESTED_EVENT, PULL_REQUEST_REVIEW, `+githubIssueOrPullRequestEventCommonTimelineItemTypes+`]) {
+				nodes {
+					__typename
+`+githubIssueOrPullRequestEventCommonQuery+`
+					... on MergedEvent {
+						id
+						actor { ...ActorFields }
+						createdAt
+					}
+					... on ReviewRequestedEvent {
+						id
+						actor { ... ActorFields }
+						createdAt
+					}
+					... on PullRequestReview {
+						id
+						author { ... ActorFields }
+						createdAt
+						state
+					}
+				}
+			}
+		}
+	}
+}
+`+githubActorFieldsFragment, map[string]interface{}{
+		"issueOrPullRequest": githubIssueOrPullRequestID,
+	}, &data); err != nil {
+		return nil, err
+	}
+	if data.Node == nil {
+		return nil, fmt.Errorf("github issue or pull request with ID %q not found", githubIssueOrPullRequestID)
+	}
+	return data.Node, nil
 }
