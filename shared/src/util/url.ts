@@ -537,11 +537,29 @@ export function withWorkspaceRootInputRevision(
  */
 export function buildSearchURLQuery(query: string, patternType: SearchPatternType): string {
     const searchParams = new URLSearchParams()
-    searchParams.set('q', query)
-    searchParams.set('patternType', patternType)
+    const patternTypeInQuery = parsePatternTypeFromQuery(query)
+    if (patternTypeInQuery) {
+        const patternTypeRegexp = /\bpatterntype:(?<type>regexp|literal)\b/
+        const newQuery = query.replace(patternTypeRegexp, '')
+        searchParams.set('q', newQuery)
+        searchParams.set('patternType', patternTypeInQuery)
+    } else {
+        searchParams.set('q', query)
+        searchParams.set('patternType', patternType)
+    }
 
     return searchParams
         .toString()
         .replace(/%2F/g, '/')
         .replace(/%3A/g, ':')
+}
+
+function parsePatternTypeFromQuery(query: string): SearchPatternType | undefined {
+    const patternTypeRegexp = /\bpatterntype:(?<type>regexp|literal)\b/
+    const matches = query.match(patternTypeRegexp)
+    if (matches && matches.groups && matches.groups.type) {
+        return matches.groups.type as SearchPatternType
+    }
+
+    return undefined
 }

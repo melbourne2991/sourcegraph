@@ -107,7 +107,10 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
                     ]),
                     // Search when a new search query was specified in the URL
                     distinctUntilChanged((a, b) => isEqual(a, b)),
-                    filter((query): query is string[] => !!query[0] && !!query[1]),
+                    filter(
+                        (queryAndPatternType): queryAndPatternType is [string, GQL.SearchPatternType] =>
+                            !!queryAndPatternType[0] && !!queryAndPatternType[1]
+                    ),
                     tap(([query]) => {
                         const query_data = queryTelemetryData(query)
                         this.props.telemetryService.log('SearchResultsQueried', {
@@ -136,15 +139,13 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
                                 .searchRequest(
                                     query,
                                     LATEST_VERSION,
-                                    patternType
-                                        ? (patternType as GQL.SearchPatternType)
-                                        : GQL.SearchPatternType.literal,
+                                    patternType ? patternType : GQL.SearchPatternType.literal,
                                     this.props
                                 )
                                 .pipe(
                                     // Log telemetry
                                     tap(
-                                        results =>
+                                        results => {
                                             this.props.telemetryService.log('SearchResultsFetched', {
                                                 code_search: {
                                                     // 🚨 PRIVACY: never provide any private data in { code_search: { results } }.
@@ -157,7 +158,11 @@ export class SearchResults extends React.Component<SearchResultsProps, SearchRes
                                                             : results.cloning.length > 0,
                                                     },
                                                 },
-                                            }),
+                                            })
+                                            if (patternType && patternType !== this.props.patternType) {
+                                                this.props.togglePatternType(patternType)
+                                            }
+                                        },
                                         error => {
                                             this.props.telemetryService.log('SearchResultsFetchFailed', {
                                                 code_search: { error_message: error.message },
